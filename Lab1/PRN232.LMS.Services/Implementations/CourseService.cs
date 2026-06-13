@@ -12,11 +12,13 @@ public sealed class CourseService : ICourseService
 {
     private readonly ICourseRepository _courses;
     private readonly ISemesterRepository _semesters;
+    private readonly IEnrollmentRepository _enrollments;
 
-    public CourseService(ICourseRepository courses, ISemesterRepository semesters)
+    public CourseService(ICourseRepository courses, ISemesterRepository semesters, IEnrollmentRepository enrollments)
     {
         _courses = courses;
         _semesters = semesters;
+        _enrollments = enrollments;
     }
 
     public async Task<PagedResult<CourseModel>> GetListAsync(ListQuery query)
@@ -70,6 +72,19 @@ public sealed class CourseService : ICourseService
     {
         var entity = await _courses.GetByIdWithSemesterAndEnrollmentsAsync(id);
         return entity is null ? null : ToModel(entity, includeSemester: true, includeEnrollments: true);
+    }
+
+    public async Task<IReadOnlyList<StudentSummaryModel>> GetStudentsForCourseAsync(int courseId)
+    {
+        var items = await _enrollments
+            .QueryWithStudent(asNoTracking: true)
+            .Where(e => e.CourseId == courseId && e.Student != null)
+            .Select(e => new StudentSummaryModel(e.Student!.StudentId, e.Student.FullName, e.Student.Email))
+            .Distinct()
+            .OrderBy(s => s.StudentId)
+            .ToListAsync();
+
+        return items;
     }
 
     public async Task<ServiceResult<CourseModel>> CreateAsync(CourseUpsertModel model)

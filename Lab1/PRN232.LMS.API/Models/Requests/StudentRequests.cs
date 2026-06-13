@@ -10,6 +10,7 @@ public sealed class StudentUpsertRequest
 
     [Required]
     [MaxLength(100)]
+    [EmailAddress]
     public string Email { get; init; } = string.Empty;
 
     public DateTime DateOfBirth { get; init; }

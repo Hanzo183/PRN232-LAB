@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.API.Infrastructure;
 using PRN232.LMS.API.Models;
@@ -9,7 +11,10 @@ using PRN232.LMS.Services.Models;
 namespace PRN232.LMS.API.Controllers;
 
 [ApiController]
-[Route("api/enrollments")]
+[ApiVersion(1.0)]
+[ApiVersion(2.0)]
+[Route("api/v{version:apiVersion}/enrollments")]
+[Authorize]
 public sealed class EnrollmentsController : ControllerBase
 {
     private static readonly HashSet<string> AllowedSort = new(StringComparer.OrdinalIgnoreCase)
@@ -30,6 +35,7 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<PagedData<object>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PagedData<object>>>> GetList([FromQuery] ListQueryParameters queryParams)
@@ -62,9 +68,10 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<EnrollmentResponse>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<EnrollmentResponse>>> GetById([FromRoute] int id)
     {
         var enrollment = await _enrollments.GetByIdAsync(id);
         if (enrollment is null)
@@ -76,6 +83,7 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<EnrollmentResponse>>> Create([FromBody] EnrollmentUpsertRequest request)
@@ -91,10 +99,11 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<EnrollmentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<EnrollmentResponse>>> Update(int id, [FromBody] EnrollmentUpsertRequest request)
+    public async Task<ActionResult<ApiResponse<EnrollmentResponse>>> Update([FromRoute] int id, [FromBody] EnrollmentUpsertRequest request)
     {
         var result = await _enrollments.UpdateAsync(id, new EnrollmentUpsertModel(request.StudentId, request.CourseId, request.EnrollDate, request.Status));
         if (!result.Success)
@@ -108,9 +117,10 @@ public sealed class EnrollmentsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    public async Task<ActionResult<ApiResponse<object>>> Delete([FromRoute] int id)
     {
         var result = await _enrollments.DeleteAsync(id);
         if (!result.Success)

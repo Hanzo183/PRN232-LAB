@@ -19,6 +19,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__LmsDb: "Server=db,1433;Database=LMS_DB;User Id=sa;Password=${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in your environment or a .env file};TrustServerCertificate=True;Encrypt=False"
+      Jwt__Key: "${JWT_SECRET:?Set JWT_SECRET in your environment or a .env file}"
+      Admin__Password: "${ADMIN_PASSWORD:-123456}"
     ports:
       - "8080:8080"
     depends_on:

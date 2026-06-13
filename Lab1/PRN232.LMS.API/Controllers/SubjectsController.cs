@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.API.Infrastructure;
 using PRN232.LMS.API.Models;
@@ -9,7 +11,10 @@ using PRN232.LMS.Services.Models;
 namespace PRN232.LMS.API.Controllers;
 
 [ApiController]
-[Route("api/subjects")]
+[ApiVersion(1.0)]
+[ApiVersion(2.0)]
+[Route("api/v{version:apiVersion}/subjects")]
+[Authorize]
 public sealed class SubjectsController : ControllerBase
 {
     private static readonly HashSet<string> AllowedSort = new(StringComparer.OrdinalIgnoreCase)
@@ -27,6 +32,7 @@ public sealed class SubjectsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<PagedData<object>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PagedData<object>>>> GetList([FromQuery] ListQueryParameters queryParams)
@@ -59,9 +65,10 @@ public sealed class SubjectsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<SubjectResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<SubjectResponse>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<SubjectResponse>>> GetById([FromRoute] int id)
     {
         var subject = await _subjects.GetByIdAsync(id);
         if (subject is null)
@@ -73,6 +80,7 @@ public sealed class SubjectsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<SubjectResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<SubjectResponse>>> Create([FromBody] SubjectUpsertRequest request)
@@ -88,10 +96,11 @@ public sealed class SubjectsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<SubjectResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<SubjectResponse>>> Update(int id, [FromBody] SubjectUpsertRequest request)
+    public async Task<ActionResult<ApiResponse<SubjectResponse>>> Update([FromRoute] int id, [FromBody] SubjectUpsertRequest request)
     {
         var result = await _subjects.UpdateAsync(id, new SubjectUpsertModel(request.SubjectCode, request.SubjectName, request.Credit));
         if (!result.Success)
@@ -105,9 +114,10 @@ public sealed class SubjectsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    public async Task<ActionResult<ApiResponse<object>>> Delete([FromRoute] int id)
     {
         var result = await _subjects.DeleteAsync(id);
         if (!result.Success)

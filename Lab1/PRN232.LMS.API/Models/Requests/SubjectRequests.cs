@@ -12,5 +12,6 @@ public sealed class SubjectUpsertRequest
     [MaxLength(100)]
     public string SubjectName { get; init; } = string.Empty;
 
+    [Range(1, 10)]
     public int Credit { get; init; }
 }

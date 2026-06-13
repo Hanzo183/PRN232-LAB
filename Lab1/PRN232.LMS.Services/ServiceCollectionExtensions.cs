@@ -16,6 +16,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISemesterRepository, SemesterRepository>();
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         // Services
         services.AddScoped<IStudentService, StudentService>();
@@ -23,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISemesterService, SemesterService>();
         services.AddScoped<ISubjectService, SubjectService>();
         services.AddScoped<IEnrollmentService, EnrollmentService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }

@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.API.Infrastructure;
 using PRN232.LMS.API.Models;
@@ -9,7 +11,10 @@ using PRN232.LMS.Services.Models;
 namespace PRN232.LMS.API.Controllers;
 
 [ApiController]
-[Route("api/students")]
+[ApiVersion(1.0)]
+[ApiVersion(2.0)]
+[Route("api/v{version:apiVersion}/students")]
+[Authorize]
 public sealed class StudentsController : ControllerBase
 {
     private static readonly HashSet<string> AllowedSort = new(StringComparer.OrdinalIgnoreCase)
@@ -30,6 +35,7 @@ public sealed class StudentsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<PagedData<object>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PagedData<object>>>> GetList([FromQuery] ListQueryParameters queryParams)
@@ -61,10 +67,11 @@ public sealed class StudentsController : ControllerBase
         return Ok(ApiResponse<PagedData<object>>.Ok(data));
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:int}", Name = "GetStudentById")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<StudentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<StudentResponse>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<StudentResponse>>> GetById([FromRoute] int id)
     {
         var student = await _students.GetByIdAsync(id);
         if (student is null)
@@ -76,6 +83,7 @@ public sealed class StudentsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<StudentResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<StudentResponse>>> Create([FromBody] StudentUpsertRequest request)
@@ -91,10 +99,11 @@ public sealed class StudentsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<StudentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<StudentResponse>>> Update(int id, [FromBody] StudentUpsertRequest request)
+    public async Task<ActionResult<ApiResponse<StudentResponse>>> Update([FromRoute] int id, [FromBody] StudentUpsertRequest request)
     {
         var result = await _students.UpdateAsync(id, new StudentUpsertModel(request.FullName, request.Email, request.DateOfBirth));
         if (!result.Success)
@@ -108,9 +117,10 @@ public sealed class StudentsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    public async Task<ActionResult<ApiResponse<object>>> Delete([FromRoute] int id)
     {
         var result = await _students.DeleteAsync(id);
         if (!result.Success)

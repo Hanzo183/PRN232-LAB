@@ -1,3 +1,5 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PRN232.LMS.API.Infrastructure;
 using PRN232.LMS.API.Models;
@@ -9,7 +11,10 @@ using PRN232.LMS.Services.Models;
 namespace PRN232.LMS.API.Controllers;
 
 [ApiController]
-[Route("api/courses")]
+[ApiVersion(1.0)]
+[ApiVersion(2.0)]
+[Route("api/v{version:apiVersion}/courses")]
+[Authorize]
 public sealed class CoursesController : ControllerBase
 {
     private static readonly HashSet<string> AllowedSort = new(StringComparer.OrdinalIgnoreCase)
@@ -30,6 +35,7 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<PagedData<object>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PagedData<object>>>> GetList([FromQuery] ListQueryParameters queryParams)
@@ -62,9 +68,10 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<CourseResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<CourseResponse>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<CourseResponse>>> GetById([FromRoute] int id)
     {
         var course = await _courses.GetByIdAsync(id);
         if (course is null)
@@ -76,6 +83,7 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<CourseResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<CourseResponse>>> Create([FromBody] CourseUpsertRequest request)
@@ -91,10 +99,11 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<CourseResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<CourseResponse>>> Update(int id, [FromBody] CourseUpsertRequest request)
+    public async Task<ActionResult<ApiResponse<CourseResponse>>> Update([FromRoute] int id, [FromBody] CourseUpsertRequest request)
     {
         var result = await _courses.UpdateAsync(id, new CourseUpsertModel(request.CourseName, request.SemesterId));
         if (!result.Success)
@@ -108,9 +117,10 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
+    public async Task<ActionResult<ApiResponse<object>>> Delete([FromRoute] int id)
     {
         var result = await _courses.DeleteAsync(id);
         if (!result.Success)
@@ -119,5 +129,16 @@ public sealed class CoursesController : ControllerBase
         }
 
         return Ok(ApiResponse<object>.Ok(new { deleted = true }));
+    }
+
+    // Nested resource example: /api/v1/courses/{courseId}/students
+    [HttpGet("{courseId:int}/students")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<StudentSummaryResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<StudentSummaryResponse>>>> GetStudentsForCourse([FromRoute] int courseId)
+    {
+        var students = await _courses.GetStudentsForCourseAsync(courseId);
+        var dto = students.Select(s => s.ToResponse()).ToList();
+        return Ok(ApiResponse<IReadOnlyList<StudentSummaryResponse>>.Ok(dto));
     }
 }

@@ -9,6 +9,8 @@ public interface ICourseService
     Task<PagedResult<CourseModel>> GetListAsync(ListQuery query);
     Task<CourseModel?> GetByIdAsync(int id);
 
+    Task<IReadOnlyList<StudentSummaryModel>> GetStudentsForCourseAsync(int courseId);
+
     Task<ServiceResult<CourseModel>> CreateAsync(CourseUpsertModel model);
     Task<ServiceResult<CourseModel>> UpdateAsync(int id, CourseUpsertModel model);
     Task<ServiceResult<bool>> DeleteAsync(int id);

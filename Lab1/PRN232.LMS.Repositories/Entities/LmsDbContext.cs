@@ -25,6 +25,10 @@ public partial class LmsDbContext : DbContext
 
     public virtual DbSet<Subject> Subjects { get; set; }
 
+    public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
 
@@ -95,6 +99,45 @@ public partial class LmsDbContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false);
             entity.Property(e => e.SubjectName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CC4C");
+
+            entity.HasIndex(e => e.Username).IsUnique();
+
+            entity.Property(e => e.Username)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+
+            entity.Property(e => e.PasswordHash)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+
+            entity.Property(e => e.Role)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.RefreshTokenId).HasName("PK__RefreshTokens__5B9C7E0C");
+
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+
+            entity.Property(e => e.TokenHash)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.ExpiresAt).HasColumnType("datetime");
+            entity.Property(e => e.RevokedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.User)
+                .WithMany(p => p.RefreshTokens)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_RefreshToken_User");
         });
 
         OnModelCreatingPartial(modelBuilder);
