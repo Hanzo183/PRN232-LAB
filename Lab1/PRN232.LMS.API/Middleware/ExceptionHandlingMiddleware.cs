@@ -45,8 +45,10 @@ public sealed class ExceptionHandlingMiddleware
             {
                 context.Response.ContentType = "application/xml";
                 var serializer = new DataContractSerializer(typeof(ApiResponse<object>));
-                serializer.WriteObject(context.Response.Body, payload);
-                await context.Response.Body.FlushAsync();
+                using var buffer = new MemoryStream();
+                serializer.WriteObject(buffer, payload);
+                buffer.Position = 0;
+                await buffer.CopyToAsync(context.Response.Body, context.RequestAborted);
                 return;
             }
 

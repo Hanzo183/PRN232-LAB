@@ -36,9 +36,10 @@ public sealed class StudentsController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<PagedData<object>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedData<StudentResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedData<SelectedFieldsResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<PagedData<object>>>> GetList([FromQuery] ListQueryParameters queryParams)
+    public async Task<ActionResult> GetList([FromQuery] ListQueryParameters queryParams)
     {
         var (success, error, query) = QueryParsing.ToListQuery(queryParams, AllowedSort, AllowedExpand);
         if (!success || query is null)
@@ -50,21 +51,34 @@ public sealed class StudentsController : ControllerBase
         var items = result.Items.Select(s => s.ToResponse()).ToList();
 
         var fields = QueryParsing.ParseFields(queryParams.Fields);
-        var shaped = FieldSelection.Shape(items, fields);
-        if (!shaped.Success)
+        if (fields is { Count: > 0 })
         {
-            return BadRequest(ApiResponse<object>.Fail("Validation", shaped.Error ?? "Invalid fields"));
+            var shaped = FieldSelection.Shape(items, fields);
+            if (!shaped.Success)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Validation", shaped.Error ?? "Invalid fields"));
+            }
+
+            var selectedData = new PagedData<SelectedFieldsResponse>(
+                Items: shaped.Items,
+                Pagination: new Pagination(
+                    result.Pagination.Page,
+                    result.Pagination.PageSize,
+                    result.Pagination.TotalItems,
+                    result.Pagination.TotalPages));
+
+            return Ok(ApiResponse<PagedData<SelectedFieldsResponse>>.Ok(selectedData));
         }
 
-        var data = new PagedData<object>(
-            Items: shaped.Items,
+        var data = new PagedData<StudentResponse>(
+            Items: items,
             Pagination: new Pagination(
                 result.Pagination.Page,
                 result.Pagination.PageSize,
                 result.Pagination.TotalItems,
                 result.Pagination.TotalPages));
 
-        return Ok(ApiResponse<PagedData<object>>.Ok(data));
+        return Ok(ApiResponse<PagedData<StudentResponse>>.Ok(data));
     }
 
     [HttpGet("{id:int}", Name = "GetStudentById")]
@@ -118,9 +132,9 @@ public sealed class StudentsController : ControllerBase
 
     [HttpDelete("{id:int}")]
     [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<DeleteResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Delete([FromRoute] int id)
+    public async Task<ActionResult<ApiResponse<DeleteResponse>>> Delete([FromRoute] int id)
     {
         var result = await _students.DeleteAsync(id);
         if (!result.Success)
@@ -128,6 +142,6 @@ public sealed class StudentsController : ControllerBase
             return NotFound(ApiResponse<object>.Fail(result.Error!.Code, result.Error.Message));
         }
 
-        return Ok(ApiResponse<object>.Ok(new { deleted = true }));
+        return Ok(ApiResponse<DeleteResponse>.Ok(new DeleteResponse(true)));
     }
 }
