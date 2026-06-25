@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
-using PRN232.LMS.API.Validation;
 
 namespace PRN232.LMS.API.Models.Requests;
 
@@ -22,7 +21,7 @@ public sealed class EnrollmentUpsertRequest
 
     [Required]
     [MaxLength(20)]
-    [PRN232.LMS.API.Validation.AllowedValues("active", "completed", "dropped")]
+    [PRN232.LMS.API.Validators.AllowedValues("active", "completed", "dropped")]
     [DataMember(Name = "status", Order = 4)]
     public string Status { get; init; } = string.Empty;
 }

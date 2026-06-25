@@ -1,7 +1,7 @@
 using FluentValidation;
 using PRN232.LMS.API.Models.Requests;
 
-namespace PRN232.LMS.API.Validation;
+namespace PRN232.LMS.API.Validators;
 
 public sealed class StudentUpsertRequestValidator : AbstractValidator<StudentUpsertRequest>
 {

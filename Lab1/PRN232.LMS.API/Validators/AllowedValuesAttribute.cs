@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PRN232.LMS.API.Validation;
+namespace PRN232.LMS.API.Validators;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public sealed class AllowedValuesAttribute : ValidationAttribute

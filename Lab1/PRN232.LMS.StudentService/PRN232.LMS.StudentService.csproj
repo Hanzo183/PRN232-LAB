@@ -40,7 +40,7 @@
     <Compile Include="..\PRN232.LMS.API\Models\*.cs" LinkBase="Models" />
     <Compile Include="..\PRN232.LMS.API\Models\Requests\*.cs" LinkBase="Models\Requests" />
     <Compile Include="..\PRN232.LMS.API\Models\Responses\*.cs" LinkBase="Models\Responses" />
-    <Compile Include="..\PRN232.LMS.API\Validation\*.cs" LinkBase="Validation" />
+    <Compile Include="..\PRN232.LMS.API\Validators\*.cs" LinkBase="Validators" />
   </ItemGroup>
 
 </Project>

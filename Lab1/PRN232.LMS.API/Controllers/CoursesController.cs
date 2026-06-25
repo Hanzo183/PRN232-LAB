@@ -35,7 +35,6 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<PagedData<CourseResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PagedData<SelectedFieldsResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -82,7 +81,6 @@ public sealed class CoursesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<CourseResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CourseResponse>>> GetById([FromRoute] int id)
@@ -147,7 +145,6 @@ public sealed class CoursesController : ControllerBase
 
     // Nested resource example: /api/v1/courses/{courseId}/students
     [HttpGet("{courseId:int}/students")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<List<StudentSummaryResponse>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<StudentSummaryResponse>>>> GetStudentsForCourse([FromRoute] int courseId)
     {

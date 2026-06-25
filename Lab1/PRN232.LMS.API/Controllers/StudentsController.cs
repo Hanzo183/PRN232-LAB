@@ -35,7 +35,6 @@ public sealed class StudentsController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<PagedData<StudentResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PagedData<SelectedFieldsResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -82,7 +81,6 @@ public sealed class StudentsController : ControllerBase
     }
 
     [HttpGet("{id:int}", Name = "GetStudentById")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<StudentResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<StudentResponse>>> GetById([FromRoute] int id)

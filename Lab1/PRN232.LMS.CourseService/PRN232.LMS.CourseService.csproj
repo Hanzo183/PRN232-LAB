@@ -41,7 +41,7 @@
     <Compile Include="..\PRN232.LMS.API\Models\*.cs" LinkBase="Models" />
     <Compile Include="..\PRN232.LMS.API\Models\Requests\*.cs" LinkBase="Models\Requests" />
     <Compile Include="..\PRN232.LMS.API\Models\Responses\*.cs" LinkBase="Models\Responses" />
-    <Compile Include="..\PRN232.LMS.API\Validation\AllowedValuesAttribute.cs" Link="Validation\AllowedValuesAttribute.cs" />
+    <Compile Include="..\PRN232.LMS.API\Validators\AllowedValuesAttribute.cs" Link="Validators\AllowedValuesAttribute.cs" />
   </ItemGroup>
 
 </Project>
