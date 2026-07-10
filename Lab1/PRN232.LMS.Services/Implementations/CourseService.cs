@@ -13,12 +13,18 @@ public sealed class CourseService : ICourseService
     private readonly ICourseRepository _courses;
     private readonly ISemesterRepository _semesters;
     private readonly IEnrollmentRepository _enrollments;
+    private readonly IStudentLookupClient _students;
 
-    public CourseService(ICourseRepository courses, ISemesterRepository semesters, IEnrollmentRepository enrollments)
+    public CourseService(
+        ICourseRepository courses,
+        ISemesterRepository semesters,
+        IEnrollmentRepository enrollments,
+        IStudentLookupClient students)
     {
         _courses = courses;
         _semesters = semesters;
         _enrollments = enrollments;
+        _students = students;
     }
 
     public async Task<PagedResult<CourseModel>> GetListAsync(ListQuery query)
@@ -76,15 +82,25 @@ public sealed class CourseService : ICourseService
 
     public async Task<IReadOnlyList<StudentSummaryModel>> GetStudentsForCourseAsync(int courseId)
     {
-        var items = await _enrollments
-            .QueryWithStudent(asNoTracking: true)
-            .Where(e => e.CourseId == courseId && e.Student != null)
-            .Select(e => new StudentSummaryModel(e.Student!.StudentId, e.Student.FullName, e.Student.Email))
+        var studentIds = await _enrollments
+            .Query(asNoTracking: true)
+            .Where(e => e.CourseId == courseId && e.StudentId.HasValue)
+            .Select(e => e.StudentId!.Value)
             .Distinct()
-            .OrderBy(s => s.StudentId)
+            .OrderBy(id => id)
             .ToListAsync();
 
-        return items;
+        var students = new List<StudentSummaryModel>();
+        foreach (var studentId in studentIds)
+        {
+            var student = await _students.GetStudentAsync(studentId);
+            if (student is not null)
+            {
+                students.Add(student);
+            }
+        }
+
+        return students;
     }
 
     public async Task<ServiceResult<CourseModel>> CreateAsync(CourseUpsertModel model)
